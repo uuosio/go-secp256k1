@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	secp256k1.SayHello()
 	secp256k1.Init()
 
 	// digest := make([]byte, 32)
