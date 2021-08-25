@@ -19,7 +19,7 @@ func main() {
 		panic(err)
 	}
 
-	seckey, err := hex.DecodeString("99870ba61ad4bfae18a1c4cea5a6b48882b95633421b108497a2b53dc779a639")
+	seckey, err := secp256k1.NewPrivateKeyFromHex("99870ba61ad4bfae18a1c4cea5a6b48882b95633421b108497a2b53dc779a639")
 	if err != nil {
 		panic(err)
 	}
@@ -30,13 +30,18 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	log.Println("++++++signature:", hex.EncodeToString(signature))
+	log.Println("++++++signature:", signature.String())
 
-	pubKey, err := secp256k1.Recover(digest, signature)
-	log.Println("++++++recovered pub key:", hex.EncodeToString(pubKey))
+	{
+		pubKey, _ := secp256k1.Recover(digest, signature)
+		log.Println("++++++pubKeyBase58:", pubKey.String())
+	}
 
-	pubkey, err := secp256k1.GetPublicKey(seckey)
-	log.Println("++++++pub key:", hex.EncodeToString(pubkey))
-	duration := time.Since(start)
-	log.Println("++++++duration:", duration)
+	{
+		pubkey, _ := secp256k1.GetPublicKey(seckey)
+		log.Println("++++++pub key:", pubkey.String())
+		duration := time.Since(start)
+		log.Println("++++++duration:", duration)
+	}
+
 }
