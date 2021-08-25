@@ -1,4 +1,4 @@
-package main
+package secp256k1
 
 /*
 #cgo CFLAGS: -I./libsecp256k1
