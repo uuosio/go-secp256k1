@@ -11,6 +11,7 @@ import (
 func main() {
 	secp256k1.SayHello()
 	secp256k1.Init()
+	defer secp256k1.Destroy()
 
 	// digest := make([]byte, 32)
 	//	seckey := make([]byte, 32)

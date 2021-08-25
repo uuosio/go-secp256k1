@@ -29,6 +29,11 @@ static void init_context() {
     gctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY | SECP256K1_CONTEXT_COMMIT | SECP256K1_CONTEXT_RANGEPROOF);
 }
 
+static void destroy_context() {
+	secp256k1_context_destroy(gctx);
+	gctx = NULL;
+}
+
 static int extended_nonce_function( unsigned char *nonce32, const unsigned char *msg32,
 									const unsigned char *key32, unsigned int attempt,
 									const void *data ) {
@@ -116,6 +121,10 @@ func SayHello() {
 
 func Init() {
 	C.init_context()
+}
+
+func Destroy() {
+	C.destroy_context()
 }
 
 type PublicKey struct {
