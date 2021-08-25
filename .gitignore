@@ -1,3 +1,4 @@
+go-secp256k1
 main
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o
