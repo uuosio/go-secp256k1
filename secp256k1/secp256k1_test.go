@@ -1,5 +1,12 @@
 package secp256k1
 
+import (
+	"encoding/hex"
+	"log"
+	"testing"
+	"time"
+)
+
 func TestA(t *testing.T) {
 	//	C.test_ge()
 	Init()
