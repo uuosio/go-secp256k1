@@ -106,7 +106,7 @@ import (
 )
 
 func SayHello() {
-	println("Hello!")
+	println("Hello!!!!")
 }
 
 func Init() {
