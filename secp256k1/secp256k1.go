@@ -111,6 +111,8 @@ import (
 	"errors"
 	"unsafe"
 
+	"crypto/sha256"
+
 	"github.com/akamensky/base58"
 	"golang.org/x/crypto/ripemd160"
 )
@@ -128,19 +130,19 @@ func Destroy() {
 }
 
 type PublicKey struct {
-	data [33]byte
+	Data [33]byte
 }
 
 func (pk *PublicKey) Bytes() []byte {
-	return pk.data[:]
+	return pk.Data[:]
 }
 
 func (pk *PublicKey) String() string {
 	hash := ripemd160.New()
-	hash.Write(pk.data[:])
+	hash.Write(pk.Data[:])
 	digest := hash.Sum(nil)
 
-	pub := pk.data[:]
+	pub := pk.Data[:]
 	pub = append(pub, digest[:4]...)
 	return base58.Encode(pub)
 }
@@ -163,17 +165,17 @@ func PublicKeyFromBase58(strPub string) (*PublicKey, error) {
 	}
 
 	_pub := &PublicKey{}
-	copy(_pub.data[:], pub)
+	copy(_pub.Data[:], pub[1:])
 	return _pub, nil
 }
 
 type PrivateKey struct {
-	data [32]byte
+	Data [32]byte
 }
 
 func NewPrivateKey(seed []byte) *PrivateKey {
 	priv := &PrivateKey{}
-	copy(priv.data[:], seed)
+	copy(priv.Data[:], seed)
 	return priv
 }
 
@@ -184,30 +186,53 @@ func NewPrivateKeyFromHex(strPriv string) (*PrivateKey, error) {
 	}
 
 	priv := &PrivateKey{}
-	copy(priv.data[:], seed)
+	copy(priv.Data[:], seed)
+	return priv, nil
+}
+
+func NewPrivateKeyFromBase58(strPriv string) (*PrivateKey, error) {
+	seed, err := base58.Decode(strPriv)
+	if err != nil {
+		return nil, err
+	}
+
+	hash := sha256.New()
+	hash.Write(seed[:33])
+	digest := hash.Sum(nil)
+
+	hash = sha256.New()
+	hash.Write(digest)
+	digest = hash.Sum(nil)
+
+	if !bytes.Equal(seed[33:], digest[:4]) {
+		return nil, errors.New("Invalid private key")
+	}
+
+	priv := &PrivateKey{}
+	copy(priv.Data[:], seed[1:])
 	return priv, nil
 }
 
 type Signature struct {
-	data [65]byte
+	Data [65]byte
 }
 
 func NewSignature(sig []byte) *Signature {
 	s := &Signature{}
-	copy(s.data[:], sig)
+	copy(s.Data[:], sig)
 	return s
 }
 
 func (sig *Signature) Bytes() []byte {
-	return sig.data[:]
+	return sig.Data[:]
 }
 
 func (sig *Signature) String() string {
-	buf := make([]byte, 0, len(sig.data)+4)
-	buf = append(buf, sig.data[:]...)
+	buf := make([]byte, 0, len(sig.Data)+4)
+	buf = append(buf, sig.Data[:]...)
 
 	hash := ripemd160.New()
-	hash.Write(sig.data[:])
+	hash.Write(sig.Data[:])
 	hash.Write([]byte("K1"))
 	digest := hash.Sum(nil)
 	buf = append(buf, digest[:4]...)
@@ -218,7 +243,7 @@ func (sig *Signature) String() string {
 func Sign(digest []byte, seckey *PrivateKey) (*Signature, error) {
 	signature := make([]byte, 65)
 	_digest := (*C.uchar)(unsafe.Pointer(&digest[0]))
-	_seckey := (*C.uchar)(unsafe.Pointer(&seckey.data[0]))
+	_seckey := (*C.uchar)(unsafe.Pointer(&seckey.Data[0]))
 	_signature := (*C.uchar)(unsafe.Pointer(&signature[0]))
 	ret := C.sign_compact(_digest, _seckey, 32, (C.bool)(true), _signature, 65)
 	if ret == 0 {
@@ -232,7 +257,7 @@ func Sign(digest []byte, seckey *PrivateKey) (*Signature, error) {
 //pubkey is 33 bytes
 func Recover(digest []byte, signature *Signature) (*PublicKey, error) {
 	_digest := (*C.uchar)(unsafe.Pointer(&digest[0]))
-	_signature := (*C.uchar)(unsafe.Pointer(&signature.data[0]))
+	_signature := (*C.uchar)(unsafe.Pointer(&signature.Data[0]))
 
 	var pubkey_recovered [33]byte
 	_pubkey_recovered := (*C.uchar)(unsafe.Pointer(&pubkey_recovered[0]))
@@ -244,12 +269,12 @@ func Recover(digest []byte, signature *Signature) (*PublicKey, error) {
 }
 
 func GetPublicKey(seckey *PrivateKey) (*PublicKey, error) {
-	if len(seckey.data) != 32 {
+	if len(seckey.Data) != 32 {
 		return nil, errors.New("seckey must be 32 bytes")
 	}
 
 	var pubkey [33]byte
-	_seckey := (*C.uchar)(unsafe.Pointer(&seckey.data[0]))
+	_seckey := (*C.uchar)(unsafe.Pointer(&seckey.Data[0]))
 	_pubkey := (*C.uchar)(unsafe.Pointer(&pubkey))
 	ret := C.secp256k1_get_public_key(_seckey, 32, _pubkey, 33)
 	if ret == 0 {

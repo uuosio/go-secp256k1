@@ -8,8 +8,9 @@ import (
 )
 
 func TestA(t *testing.T) {
-	//	C.test_ge()
+	SayHello()
 	Init()
+	defer Destroy()
 
 	// digest := make([]byte, 32)
 	//	seckey := make([]byte, 32)
@@ -18,7 +19,7 @@ func TestA(t *testing.T) {
 		panic(err)
 	}
 
-	seckey, err := hex.DecodeString("99870ba61ad4bfae18a1c4cea5a6b48882b95633421b108497a2b53dc779a639")
+	seckey, err := NewPrivateKeyFromHex("99870ba61ad4bfae18a1c4cea5a6b48882b95633421b108497a2b53dc779a639")
 	if err != nil {
 		panic(err)
 	}
@@ -29,13 +30,23 @@ func TestA(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	log.Println("++++++signature:", hex.EncodeToString(signature))
+	log.Println("++++++signature:", signature.String())
 
-	pubKey, err := Recover(digest, signature)
-	log.Println("++++++recovered pub key:", hex.EncodeToString(pubKey))
+	{
+		pubKey, _ := Recover(digest, signature)
+		log.Println("++++++pubKeyBase58:", pubKey.String())
+	}
 
-	pubkey, err := GetPublicKey(seckey)
-	log.Println("++++++pub key:", hex.EncodeToString(pubkey))
-	duration := time.Since(start)
-	log.Println("++++++time:", duration)
+	{
+		pubkey, _ := GetPublicKey(seckey)
+		log.Println("++++++pub key:", pubkey.String())
+		duration := time.Since(start)
+		log.Println("++++++duration:", duration)
+	}
+
+	priv, err := NewPrivateKeyFromBase58("5Jugyak9o86JgVCX7fU1rzf96gCSgFdAvKcA79neAJaMLdctPYy")
+	if err != nil {
+		panic(err)
+	}
+	log.Println("++++++priv key:", hex.EncodeToString(priv.Data[:]))
 }
