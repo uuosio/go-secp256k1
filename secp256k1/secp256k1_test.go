@@ -44,9 +44,15 @@ func TestA(t *testing.T) {
 		log.Println("++++++duration:", duration)
 	}
 
-	priv, err := NewPrivateKeyFromBase58("5Jugyak9o86JgVCX7fU1rzf96gCSgFdAvKcA79neAJaMLdctPYy")
+	priv, err := NewPrivateKeyFromBase58("5JRYimgLBrRLCBAcjHUWCYRv3asNedTYYzVgmiU4q2ZVxMBiJXL")
 	if err != nil {
 		panic(err)
 	}
 	log.Println("++++++priv key:", hex.EncodeToString(priv.Data[:]))
+
+	pub, err := priv.GetPublicKey()
+	if err != nil {
+		panic(err)
+	}
+	log.Println("++++++pub key:", pub.String())
 }

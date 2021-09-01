@@ -145,10 +145,14 @@ func (pk *PublicKey) String() string {
 
 	pub := pk.Data[:]
 	pub = append(pub, digest[:4]...)
-	return base58.Encode(pub)
+	return "EOS" + base58.Encode(pub)
 }
 
 func PublicKeyFromBase58(strPub string) (*PublicKey, error) {
+	if strings.HasPrefix(strPub, "EOS") {
+		strPub = strPub[3:]
+	}
+
 	pub, err := base58.Decode(strPub)
 	if err != nil {
 		return nil, err
@@ -212,6 +216,17 @@ func NewPrivateKeyFromBase58(strPriv string) (*PrivateKey, error) {
 	priv := &PrivateKey{}
 	copy(priv.Data[:], seed[1:])
 	return priv, nil
+}
+
+func (priv *PrivateKey) GetPublicKey() (*PublicKey, error) {
+	var pubkey [33]byte
+	_seckey := (*C.uchar)(unsafe.Pointer(&priv.Data[0]))
+	_pubkey := (*C.uchar)(unsafe.Pointer(&pubkey))
+	ret := C.secp256k1_get_public_key(_seckey, 32, _pubkey, 33)
+	if ret == 0 {
+		return nil, errors.New("get public key failed")
+	}
+	return &PublicKey{pubkey}, nil
 }
 
 func (priv *PrivateKey) Sign(digest []byte) (*Signature, error) {
