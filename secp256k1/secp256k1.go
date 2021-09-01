@@ -214,6 +214,18 @@ func NewPrivateKeyFromBase58(strPriv string) (*PrivateKey, error) {
 	return priv, nil
 }
 
+func (priv *PrivateKey) Sign(digest []byte) (*Signature, error) {
+	signature := make([]byte, 65)
+	_digest := (*C.uchar)(unsafe.Pointer(&digest[0]))
+	_seckey := (*C.uchar)(unsafe.Pointer(&priv.Data[0]))
+	_signature := (*C.uchar)(unsafe.Pointer(&signature[0]))
+	ret := C.sign_compact(_digest, _seckey, 32, (C.bool)(true), _signature, 65)
+	if ret == 0 {
+		return nil, errors.New("sign failed")
+	}
+	return NewSignature(signature), nil
+}
+
 type Signature struct {
 	Data [65]byte
 }
