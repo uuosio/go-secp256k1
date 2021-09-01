@@ -109,6 +109,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
+	"strings"
 	"unsafe"
 
 	"crypto/sha256"
@@ -221,6 +222,33 @@ func NewSignature(sig []byte) *Signature {
 	s := &Signature{}
 	copy(s.Data[:], sig)
 	return s
+}
+
+func NewSignatureFromBase58(sig string) (*Signature, error) {
+	if !strings.HasPrefix(sig, "SIG_K1_") {
+		return nil, errors.New("Invalid signature")
+	}
+	_sig := sig[len("SIG_K1_"):]
+	__sig, err := base58.Decode(_sig)
+	if err != nil {
+		return nil, err
+	}
+	if len(__sig) != 65+4 {
+		return nil, errors.New("Invalid signature length")
+	}
+
+	hash := ripemd160.New()
+	hash.Write(__sig[:65])
+	hash.Write([]byte("K1"))
+	digest := hash.Sum(nil)
+
+	if !bytes.Equal(__sig[65:], digest[:4]) {
+		return nil, errors.New("Invalid signature: checksum mismatch")
+	}
+
+	s := &Signature{}
+	copy(s.Data[:], __sig)
+	return s, nil
 }
 
 func (sig *Signature) Bytes() []byte {
