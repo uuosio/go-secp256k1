@@ -122,12 +122,20 @@ func SayHello() {
 	println("Hello!!!!")
 }
 
+var gInit = false
+
 func Init() {
-	C.init_context()
+	if !gInit {
+		C.init_context()
+		gInit = true
+	}
 }
 
 func Destroy() {
-	C.destroy_context()
+	if gInit {
+		C.destroy_context()
+		gInit = false
+	}
 }
 
 type PublicKey struct {
