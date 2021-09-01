@@ -218,15 +218,16 @@ func NewPrivateKeyFromBase58(strPriv string) (*PrivateKey, error) {
 	return priv, nil
 }
 
-func (priv *PrivateKey) GetPublicKey() (*PublicKey, error) {
+func (priv *PrivateKey) GetPublicKey() *PublicKey {
 	var pubkey [33]byte
 	_seckey := (*C.uchar)(unsafe.Pointer(&priv.Data[0]))
 	_pubkey := (*C.uchar)(unsafe.Pointer(&pubkey))
 	ret := C.secp256k1_get_public_key(_seckey, 32, _pubkey, 33)
 	if ret == 0 {
-		return nil, errors.New("get public key failed")
+		panic("secp256k1_get_public_key failed")
+		return nil
 	}
-	return &PublicKey{pubkey}, nil
+	return &PublicKey{pubkey}
 }
 
 func (priv *PrivateKey) Sign(digest []byte) (*Signature, error) {
