@@ -1,4 +1,4 @@
-module github.com/learnforpractice/go-secp256k1
+module github.com/uuosio/go-secp256k1
 
 go 1.16
 
