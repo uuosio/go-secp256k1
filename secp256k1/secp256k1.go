@@ -239,6 +239,10 @@ func (priv *PrivateKey) GetPublicKey() *PublicKey {
 }
 
 func (priv *PrivateKey) Sign(digest []byte) (*Signature, error) {
+	if len(digest) != 32 {
+		return nil, errors.New("Invalid digest length")
+	}
+
 	signature := make([]byte, 65)
 	_digest := (*C.uchar)(unsafe.Pointer(&digest[0]))
 	_seckey := (*C.uchar)(unsafe.Pointer(&priv.Data[0]))
@@ -305,15 +309,10 @@ func (sig *Signature) String() string {
 }
 
 func Sign(digest []byte, seckey *PrivateKey) (*Signature, error) {
-	signature := make([]byte, 65)
-	_digest := (*C.uchar)(unsafe.Pointer(&digest[0]))
-	_seckey := (*C.uchar)(unsafe.Pointer(&seckey.Data[0]))
-	_signature := (*C.uchar)(unsafe.Pointer(&signature[0]))
-	ret := C.sign_compact(_digest, _seckey, 32, (C.bool)(true), _signature, 65)
-	if ret == 0 {
-		return nil, errors.New("sign failed")
+	if len(digest) != 32 {
+		return nil, errors.New("Invalid digest length")
 	}
-	return NewSignature(signature), nil
+	return seckey.Sign(digest)
 }
 
 //digest is 32 bytes
