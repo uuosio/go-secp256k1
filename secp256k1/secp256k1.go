@@ -1,9 +1,9 @@
 package secp256k1
 
 /*
-#cgo CFLAGS: -I./libsecp256k1
-#cgo CFLAGS: -I./libsecp256k1/include
-#cgo CFLAGS: -I./libsecp256k1/src/
+#cgo CFLAGS: -I./libsecp256k1-zkp
+#cgo CFLAGS: -I./libsecp256k1-zkp/include
+#cgo CFLAGS: -I./libsecp256k1-zkp/src/
 
 //#define HAVE_CONFIG_H 1
 #include <stdbool.h>
@@ -22,7 +22,7 @@ package secp256k1
 #define USE_SCALAR_INV_BUILTIN
 #define NDEBUG
 
-#include "./libsecp256k1/src/secp256k1.c"
+#include "./libsecp256k1-zkp/src/secp256k1.c"
 
 static secp256k1_context_t *gctx = NULL;
 static void init_context() {
