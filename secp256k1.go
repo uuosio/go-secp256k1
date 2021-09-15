@@ -226,6 +226,21 @@ func NewPrivateKeyFromBase58(strPriv string) (*PrivateKey, error) {
 	return priv, nil
 }
 
+func (priv *PrivateKey) String() string {
+	seed := []byte{0x80}
+	seed = append(seed, priv.Data[:]...)
+	hash := sha256.New()
+	hash.Write(seed)
+	digest := hash.Sum(nil)
+
+	hash = sha256.New()
+	hash.Write(digest)
+	digest = hash.Sum(nil)
+
+	seed = append(seed, digest[:4]...)
+	return base58.Encode(seed)
+}
+
 func (priv *PrivateKey) GetPublicKey() *PublicKey {
 	var pubkey [33]byte
 	_seckey := (*C.uchar)(unsafe.Pointer(&priv.Data[0]))
