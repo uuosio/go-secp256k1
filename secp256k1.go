@@ -109,7 +109,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
-	"log"
 	"strings"
 	"unsafe"
 
@@ -125,12 +124,17 @@ func SayHello() {
 
 var gInit = false
 
-func Init() {
+func Init() bool {
 	if !gInit {
 		C.init_context()
 		gInit = true
 	}
+	return true
 }
+
+var (
+	_init = Init()
+)
 
 func Destroy() {
 	if gInit {
@@ -170,7 +174,6 @@ func (pk *PublicKey) String() string {
 
 func NewPublicKeyFromBase58(strPub string) (*PublicKey, error) {
 	if strings.HasPrefix(strPub, "EOS") {
-		log.Println("+++++++prefix: EOS")
 		strPub = strPub[3:]
 		pub, err := base58.Decode(strPub)
 		if err != nil {
