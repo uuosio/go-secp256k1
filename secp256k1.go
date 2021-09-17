@@ -109,6 +109,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
+	"log"
 	"strings"
 	"unsafe"
 
@@ -146,7 +147,7 @@ func (pk *PublicKey) Bytes() []byte {
 	return pk.Data[:]
 }
 
-func (pk *PublicKey) String() string {
+func (pk *PublicKey) toEosPublicKey() string {
 	hash := ripemd160.New()
 	hash.Write(pk.Data[:])
 	digest := hash.Sum(nil)
@@ -156,30 +157,65 @@ func (pk *PublicKey) String() string {
 	return "EOS" + base58.Encode(pub)
 }
 
+func (pk *PublicKey) String() string {
+	hash := ripemd160.New()
+	hash.Write(pk.Data[:])
+	hash.Write([]byte("K1"))
+	digest := hash.Sum(nil)
+
+	pub := pk.Data[:]
+	pub = append(pub, digest[:4]...)
+	return "PUB_K1_" + base58.Encode(pub)
+}
+
 func PublicKeyFromBase58(strPub string) (*PublicKey, error) {
 	if strings.HasPrefix(strPub, "EOS") {
+		log.Println("+++++++prefix: EOS")
 		strPub = strPub[3:]
-	}
+		pub, err := base58.Decode(strPub)
+		if err != nil {
+			return nil, err
+		}
 
-	pub, err := base58.Decode(strPub)
-	if err != nil {
-		return nil, err
-	}
+		if len(pub) != 37 {
+			return nil, errors.New("Invalid public key length")
+		}
 
-	if len(pub) != 37 {
-		return nil, errors.New("Invalid public key length")
-	}
+		hash := ripemd160.New()
+		hash.Write(pub[:33])
+		digest := hash.Sum(nil)
+		if !bytes.Equal(pub[33:], digest[:4]) {
+			return nil, errors.New("Invalid public key")
+		}
 
-	hash := ripemd160.New()
-	hash.Write(pub[:33])
-	digest := hash.Sum(nil)
-	if !bytes.Equal(pub[33:], digest[:4]) {
-		return nil, errors.New("Invalid public key")
-	}
+		_pub := &PublicKey{}
+		copy(_pub.Data[:], pub[:])
+		return _pub, nil
+	} else if strings.HasPrefix(strPub, "PUB_K1_") {
+		strPub = strPub[len("PUB_K1_"):]
+		pub, err := base58.Decode(strPub)
+		if err != nil {
+			return nil, err
+		}
 
-	_pub := &PublicKey{}
-	copy(_pub.Data[:], pub[1:])
-	return _pub, nil
+		if len(pub) != 37 {
+			return nil, errors.New("Invalid public key length")
+		}
+
+		hash := ripemd160.New()
+		hash.Write(pub[:33])
+		hash.Write([]byte("K1"))
+		digest := hash.Sum(nil)
+		if !bytes.Equal(pub[33:], digest[:4]) {
+			return nil, errors.New("Invalid public key")
+		}
+
+		_pub := &PublicKey{}
+		copy(_pub.Data[:], pub[:])
+		return _pub, nil
+	} else {
+		return nil, errors.New("Invalid public key format")
+	}
 }
 
 type PrivateKey struct {
