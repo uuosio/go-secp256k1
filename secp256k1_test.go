@@ -63,7 +63,7 @@ func TestB(t *testing.T) {
 		panic(err)
 	}
 
-	if strPubEos != pub.toEosPublicKey() {
+	if strPubEos != pub.StringEOS() {
 		panic("error")
 	}
 

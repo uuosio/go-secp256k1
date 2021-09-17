@@ -147,7 +147,7 @@ func (pk *PublicKey) Bytes() []byte {
 	return pk.Data[:]
 }
 
-func (pk *PublicKey) toEosPublicKey() string {
+func (pk *PublicKey) StringEOS() string {
 	hash := ripemd160.New()
 	hash.Write(pk.Data[:])
 	digest := hash.Sum(nil)
