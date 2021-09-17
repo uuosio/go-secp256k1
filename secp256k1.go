@@ -168,7 +168,7 @@ func (pk *PublicKey) String() string {
 	return "PUB_K1_" + base58.Encode(pub)
 }
 
-func PublicKeyFromBase58(strPub string) (*PublicKey, error) {
+func NewPublicKeyFromBase58(strPub string) (*PublicKey, error) {
 	if strings.HasPrefix(strPub, "EOS") {
 		log.Println("+++++++prefix: EOS")
 		strPub = strPub[3:]
