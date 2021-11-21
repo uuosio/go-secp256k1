@@ -22,15 +22,31 @@ package secp256k1
 #define USE_SCALAR_INV_BUILTIN
 #define NDEBUG
 
+#define secp256k1_context_destroy __secp256k1_context_destroy
+#define secp256k1_ec_seckey_verify __secp256k1_ec_seckey_verify
+#define secp256k1_ecdsa_verify __secp256k1_ecdsa_verify
+#define secp256k1_nonce_function_default __secp256k1_nonce_function_default
+#define secp256k1_ecdsa_sign __secp256k1_ecdsa_sign
+#define secp256k1_ec_privkey_tweak_mul __secp256k1_ec_privkey_tweak_mul
+#define secp256k1_ec_pubkey_tweak_mul __secp256k1_ec_pubkey_tweak_mul
+#define secp256k1_context_randomize __secp256k1_context_randomize
+#define secp256k1_ec_pubkey_create __secp256k1_ec_pubkey_create
+#define secp256k1_context_create __secp256k1_context_create
+#define secp256k1_context_clone __secp256k1_context_clone
+#define secp256k1_ec_privkey_tweak_add __secp256k1_ec_privkey_tweak_add
+#define secp256k1_ec_pubkey_tweak_add __secp256k1_ec_pubkey_tweak_add
+#define secp256k1_nonce_function_rfc6979 __secp256k1_nonce_function_rfc6979
+
+
 #include "./libsecp256k1-zkp/src/secp256k1.c"
 
 static secp256k1_context_t *gctx = NULL;
 static void init_context() {
-    gctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY | SECP256K1_CONTEXT_COMMIT | SECP256K1_CONTEXT_RANGEPROOF);
+    gctx = __secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY | SECP256K1_CONTEXT_COMMIT | SECP256K1_CONTEXT_RANGEPROOF);
 }
 
 static void destroy_context() {
-	secp256k1_context_destroy(gctx);
+	__secp256k1_context_destroy(gctx);
 	gctx = NULL;
 }
 
@@ -39,7 +55,7 @@ static int extended_nonce_function( unsigned char *nonce32, const unsigned char 
 									const void *data ) {
 	unsigned int* extra = (unsigned int*) data;
 	(*extra)++;
-	return secp256k1_nonce_function_default( nonce32, msg32, key32, *extra, 0 );
+	return __secp256k1_nonce_function_default( nonce32, msg32, key32, *extra, 0 );
 }
 
 static int is_canonical( const unsigned char* data ) {
@@ -91,7 +107,7 @@ static int secp256k1_recover( const unsigned char* signature, size_t signature_s
 static int secp256k1_get_public_key(const unsigned char* seckey, size_t seckey_size, unsigned char* pubkey, size_t pubkey_size)
 {
 	unsigned int pk_len;
-	int ret = secp256k1_ec_pubkey_create( gctx, pubkey, (int*) &pk_len, seckey, 1 );
+	int ret = __secp256k1_ec_pubkey_create( gctx, pubkey, (int*) &pk_len, seckey, 1 );
 	if (ret == 0) {
 		return 0;
 	}
@@ -101,7 +117,6 @@ static int secp256k1_get_public_key(const unsigned char* seckey, size_t seckey_s
 	}
 	return 1;
 }
-
 */
 import "C"
 
