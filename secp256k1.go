@@ -42,11 +42,11 @@ package secp256k1
 
 static secp256k1_context_t *gctx = NULL;
 static void init_context() {
-    gctx = __secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY | SECP256K1_CONTEXT_COMMIT | SECP256K1_CONTEXT_RANGEPROOF);
+    gctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY | SECP256K1_CONTEXT_COMMIT | SECP256K1_CONTEXT_RANGEPROOF);
 }
 
 static void destroy_context() {
-	__secp256k1_context_destroy(gctx);
+	secp256k1_context_destroy(gctx);
 	gctx = NULL;
 }
 
@@ -55,7 +55,7 @@ static int extended_nonce_function( unsigned char *nonce32, const unsigned char 
 									const void *data ) {
 	unsigned int* extra = (unsigned int*) data;
 	(*extra)++;
-	return __secp256k1_nonce_function_default( nonce32, msg32, key32, *extra, 0 );
+	return secp256k1_nonce_function_default( nonce32, msg32, key32, *extra, 0 );
 }
 
 static int is_canonical( const unsigned char* data ) {
@@ -107,7 +107,7 @@ static int secp256k1_recover( const unsigned char* signature, size_t signature_s
 static int secp256k1_get_public_key(const unsigned char* seckey, size_t seckey_size, unsigned char* pubkey, size_t pubkey_size)
 {
 	unsigned int pk_len;
-	int ret = __secp256k1_ec_pubkey_create( gctx, pubkey, (int*) &pk_len, seckey, 1 );
+	int ret = secp256k1_ec_pubkey_create( gctx, pubkey, (int*) &pk_len, seckey, 1 );
 	if (ret == 0) {
 		return 0;
 	}
