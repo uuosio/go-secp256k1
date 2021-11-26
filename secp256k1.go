@@ -263,6 +263,10 @@ func NewPrivateKeyFromBase58(strPriv string) (*PrivateKey, error) {
 		return nil, err
 	}
 
+	if len(seed) != 37 {
+		return nil, errors.New("Invalid private key")
+	}
+
 	hash := sha256.New()
 	hash.Write(seed[:33])
 	digest := hash.Sum(nil)
