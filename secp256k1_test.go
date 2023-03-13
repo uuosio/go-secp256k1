@@ -50,6 +50,12 @@ func TestA(t *testing.T) {
 	}
 	log.Println("++++++priv key:", hex.EncodeToString(priv.Data[:]))
 
+	priv, err = NewPrivateKeyFromBase58("PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V")
+	if err != nil {
+		panic(err)
+	}
+	log.Println("++++++priv key:", hex.EncodeToString(priv.Data[:]))
+
 	pub := priv.GetPublicKey()
 	log.Println("++++++pub key:", pub.String())
 }

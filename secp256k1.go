@@ -258,30 +258,55 @@ func NewPrivateKeyFromHex(strPriv string) (*PrivateKey, error) {
 }
 
 func NewPrivateKeyFromBase58(strPriv string) (*PrivateKey, error) {
-	seed, err := base58.Decode(strPriv)
-	if err != nil {
-		return nil, err
+
+	if strings.HasPrefix(strPriv, "PVT_K1_") {
+		strPriv = strings.TrimPrefix(strPriv, "PVT_K1_")
+		seed, err := base58.Decode(strPriv)
+		if err != nil {
+			return nil, err
+		}
+		if len(seed) != 36 {
+			return nil, errors.New("Invalid k1 private key")
+		}
+
+		hash := ripemd160.New()
+		hash.Write(seed[:32])
+		hash.Write([]byte("K1"))
+		digest := hash.Sum(nil)
+
+		if !bytes.Equal(seed[32:], digest[:4]) {
+			return nil, errors.New("Invalid private key")
+		}
+
+		priv := &PrivateKey{}
+		copy(priv.Data[:], seed[:])
+		return priv, nil
+	} else {
+		seed, err := base58.Decode(strPriv)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(seed) != 37 {
+			return nil, errors.New("Invalid private key")
+		}
+
+		hash := sha256.New()
+		hash.Write(seed[:33])
+		digest := hash.Sum(nil)
+
+		hash = sha256.New()
+		hash.Write(digest)
+		digest = hash.Sum(nil)
+
+		if !bytes.Equal(seed[33:], digest[:4]) {
+			return nil, errors.New("Invalid private key")
+		}
+
+		priv := &PrivateKey{}
+		copy(priv.Data[:], seed[1:])
+		return priv, nil
 	}
-
-	if len(seed) != 37 {
-		return nil, errors.New("Invalid private key")
-	}
-
-	hash := sha256.New()
-	hash.Write(seed[:33])
-	digest := hash.Sum(nil)
-
-	hash = sha256.New()
-	hash.Write(digest)
-	digest = hash.Sum(nil)
-
-	if !bytes.Equal(seed[33:], digest[:4]) {
-		return nil, errors.New("Invalid private key")
-	}
-
-	priv := &PrivateKey{}
-	copy(priv.Data[:], seed[1:])
-	return priv, nil
 }
 
 func (priv *PrivateKey) String() string {
@@ -388,9 +413,9 @@ func Sign(digest []byte, seckey *PrivateKey) (*Signature, error) {
 	return seckey.Sign(digest)
 }
 
-//digest is 32 bytes
-//signature is 65 bytes
-//pubkey is 33 bytes
+// digest is 32 bytes
+// signature is 65 bytes
+// pubkey is 33 bytes
 func Recover(digest []byte, signature *Signature) (*PublicKey, error) {
 	_digest := (*C.uchar)(unsafe.Pointer(&digest[0]))
 	_signature := (*C.uchar)(unsafe.Pointer(&signature.Data[0]))
